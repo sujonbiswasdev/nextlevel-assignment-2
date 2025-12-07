@@ -63,7 +63,6 @@ const getUser = async (id: string, role: string) => {
         const data =
         {
             id: item.id,
-            customer_id: item.customer_id,
             vehicle_id: item.vehicle_id,
             rent_start_date: start_rent,
             rent_end_date: end_rent,
