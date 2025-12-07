@@ -1,6 +1,7 @@
 import { Pool } from 'pg'
 import config from './config'
 
+
 export const pool = new Pool({
     connectionString:config.db_url
 })
@@ -29,7 +30,6 @@ const initialDb=async()=>{
             )
             `)
 
-
             // bookings table create
             await pool.query(`
                 CREATE TABLE IF NOT EXISTS Bookings(
@@ -43,5 +43,4 @@ const initialDb=async()=>{
                 )
                 `)
 }
-
 export default initialDb
