@@ -105,7 +105,7 @@ const updateUser = async (id: string, role: string, status: string) => {
     }
 
 
-    if(status=='returned' || status=='cancelled'){
+    if(status=='returned' || status=='active'){
         throw new Error('you just change cancelled status and admin change all status')
     }
 
