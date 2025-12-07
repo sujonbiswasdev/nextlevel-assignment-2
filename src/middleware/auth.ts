@@ -9,25 +9,26 @@ const auth=(roles:string[])=>{
         const token = req.headers.authorization
 
         if(!token){
-            throw new Error("you are not authorized")
+               res.status(401).json({sucess:false,message:"you are not authorized"})
+               return;
         }
 
-        const decoded = jwt.verify(token, config.jwt_secret as string) as JwtPayload;
+        const decoded = jwt.verify(token as string, config.jwt_secret as string) as JwtPayload;
         if(!decoded){
-             res.status(500).json({sucess:false,message:"you are not valid"})
+             res.status(400).json({sucess:false,message:"you are not valid"})
+             return;
         }
         req.users=decoded
         const users = await pool.query(`
             SELECT * FROM users WHERE email=$1
             `,[decoded.email])
         if(users.rows.length===0){
-            throw new Error(`user not found`)
+            res.status(404).json({sucess:false,message:"users not found"})
+            return;
         }
-        console.log(decoded.role);
-       console.log(roles);
         if(roles.length && !roles.includes(decoded.role)){
-
-            throw new Error(`permition not valid`)
+            res.status(404).json({sucess:false,message:"permition not valid"})
+            return;
         }
         next()
     }
