@@ -36,7 +36,7 @@ const initialDb=async()=>{
                 id serial PRIMARY KEY,
                 customer_id INT REFERENCES users(id) ON DELETE CASCADE,
                 vehicle_id INT REFERENCES Vehicles(id) ON DELETE CASCADE,
-                rent_start_date DATE NOT NULL CHECK (rent_start_date>'2000-01-01'),
+                rent_start_date DATE NOT NULL CHECK (rent_start_date>'2024-01-01'),
                 rent_end_date DATE NOT NULL CHECK (rent_end_date>rent_start_date),
                 total_price INT CHECK (total_price>0),
                 status VARCHAR (50) NOT NULL CHECK (status='active' OR status='cancelled' OR status='returned')
