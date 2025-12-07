@@ -1,7 +1,5 @@
 import { Request, Response } from "express";
 import { vehiclesServices } from "./vehicles.services";
-import config from "../../config/config";
-import jwt, { JwtPayload } from 'jsonwebtoken'
 const createVehicles=async(req:Request,res:Response)=>{
   
     try {
