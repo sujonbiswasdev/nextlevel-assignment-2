@@ -24,6 +24,7 @@ const getUser = async (id: string, role: string) => {
          users.name AS customer_name,
            users.email AS customer_email,
           vehicles.vehicle_name,
+          vehicles.daily_rent_price,
           vehicles.registration_number
        FROM bookings
       LEFT JOIN users ON users.id = bookings.customer_id
