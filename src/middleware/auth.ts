@@ -21,7 +21,7 @@ const auth=(roles:string[])=>{
             SELECT * FROM users WHERE email=$1
             `,[decoded.email])
         if(users.rows.length===0){
-           const data =  res.status(404).json({sucess:false,message:"users not found"})
+           const data =  res.status(404).json({sucess:false,message:"token users not found"})
            throw new Error(data as any)
             return;
         }
