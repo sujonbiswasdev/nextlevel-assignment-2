@@ -39,9 +39,7 @@ const getSingleVehicles=async(req:Request,res:Response)=>{
 const updateVehicles=async(req:Request,res:Response)=>{
     const {vehicle_name,type,registration_number,daily_rent_price,availability_status}=req.body;
     const {id}= req.params;
-      const token =req.headers.authorization
-    const decoded = jwt.verify(token as string,config.jwt_secret as string) as JwtPayload;
-    const {role}=decoded;
+    const {role}:string| any=req.users;
     try {
         const result = await vehiclesServices.updateVehicles(vehicle_name,type,registration_number,daily_rent_price,availability_status,id as string,role as string)
 
