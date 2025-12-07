@@ -87,7 +87,7 @@ const getUser = async (id: string, role: string) => {
 const updateUser = async (id: string, role: string, status: string) => {
     const statusarr=['active','cancelled','returned']
     if(!statusarr.includes(status)){
-        throw new Error(`Enter status must be active,canclled,returned`)
+        throw new Error(`Enter status must be active,cancelled,returned`)
         return 0;
     }
 
