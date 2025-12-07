@@ -1,17 +1,31 @@
 import { pool } from "../../config/DB";
 import { bookingget } from "../../utils/bookingGet_Admin";
-import {bookingDate } from "../../utils/bookings";
+import { bookingDate } from "../../utils/bookings";
 
 const bookingsCreate = async (payload: Record<string, unknown>) => {
     const { customer_id, vehicle_id, rent_start_date, rent_end_date, status } = payload;
-   const data= await pool.query(`
+
+    const exitsbookings = await pool.query(`
+        SELECT * FROM bookings WHERE status='active' AND vehicle_id=$1
+        `, [vehicle_id])
+
+    const exit1: number | null = exitsbookings.rowCount
+    if (exit1! > 0) {
+        throw new Error("This vehicle is already booked")
+    }
+
+    const data = await pool.query(`
         INSERT INTO bookings(customer_id,vehicle_id,rent_start_date,rent_end_date,status) VALUES($1,$2,$3,$4, $5) RETURNING id
         `, [customer_id, vehicle_id, rent_start_date, rent_end_date, status || 'active'])
-    const id= data.rows[0].id
-    let roles='create'
-    const logic = `SELECT * FROM bookings b LEFT JOIN vehicles v ON b.vehicle_id=v.id WHERE b.id=$1`
 
-    const result = bookingDate( logic,id,roles,status as string)
+    await pool.query(`
+            UPDATE vehicles SET availability_status='booked' WHERE id=$1
+            `, [vehicle_id])
+
+    const id = data.rows[0].id
+    let roles = 'create'
+    const logic = `SELECT * FROM bookings b LEFT JOIN vehicles v ON b.vehicle_id=v.id WHERE b.id=$1`
+    const result = bookingDate(logic, id, roles, status as string)
     return result
 
 }
@@ -40,7 +54,7 @@ const getUser = async (id: string, role: string) => {
            SELECT bookings.*, vehicles.vehicle_name,vehicles.registration_number,vehicles.type FROM bookings FULL JOIN vehicles ON bookings.vehicle_id=vehicles.id WHERE customer_id=$1;
     `, [id])
 
-    if(result.rows.length===0){
+    if (result.rows.length === 0) {
         throw new Error('bookings data not found')
         return
     }
@@ -50,13 +64,13 @@ const getUser = async (id: string, role: string) => {
         const rent_end = new Date(item.rent_end_date)
 
         const getmonthStart = rent_start.getMonth().toString().length;
-        const rentStart = getmonthStart==1?"0":""
+        const rentStart = getmonthStart == 1 ? "0" : ""
         const getmonthEnd = rent_end.getMonth().toString().length;
-        const rentEnd = getmonthEnd==1?"0":""
-        const getdateStart=rent_start.getDate().toString().length;
-        const getdate_start = getdateStart==1?"0":""
-        const getdateEnd =rent_end.getDate().toString().length;
-        const getdate_end = getdateEnd==1?"0":""
+        const rentEnd = getmonthEnd == 1 ? "0" : ""
+        const getdateStart = rent_start.getDate().toString().length;
+        const getdate_start = getdateStart == 1 ? "0" : ""
+        const getdateEnd = rent_end.getDate().toString().length;
+        const getdate_end = getdateEnd == 1 ? "0" : ""
         const start_rent = `${rent_start.getFullYear()}-${rentStart}${rent_start.getMonth() + 1}-${getdate_start}${rent_start.getDate()}`;
         const end_rent = `${rent_end.getFullYear()}-${rentEnd}${rent_end.getMonth() + 1}-${getdate_end}${rent_end.getDate()}`;
         const number_of_data: number = rent_end.getDay() - rent_start.getDay()
@@ -84,35 +98,60 @@ const getUser = async (id: string, role: string) => {
     return customer
 }
 
-const updateUser = async (id: string, role: string, status: string) => {
-    const statusarr=['active','cancelled','returned']
-    if(!statusarr.includes(status)){
+const updateUser = async (id: string, role: string, status: string, res: any) => {
+    const statusarr = ['active', 'cancelled', 'returned']
+    if (!statusarr.includes(status)) {
         throw new Error(`Enter status must be active,cancelled,returned`)
         return 0;
     }
 
+    const bookingRes = await pool.query(
+        `SELECT * FROM bookings WHERE id = $1`,
+        [id]
+    );
+
+    if (bookingRes.rowCount === 0) {
+        return res.status(404).json({
+            success: false,
+            message: "Booking not found",
+        });
+    }
+
+    const booking = bookingRes.rows[0];
+
     if (role == "admin") {
-        const getuser = await pool.query(`SELECT * FROM bookings WHERE id=$1`,[id])
+        if (status == 'returned' || status == 'cancelled') {
+            await pool.query(`
+               UPDATE Vehicles SET availability_status='available' WHERE id=$1
+        `, [booking.vehicle_id])
+        } else {
+            await pool.query(`
+               UPDATE Vehicles SET availability_status='booked' WHERE id=$1
+        `, [booking.vehicle_id])
+        }
+        const getuser = await pool.query(`SELECT * FROM bookings WHERE id=$1`, [id])
 
         if (!getuser.rows[0].id) {
             return 'id not found'
         }
-
         await pool.query(`UPDATE bookings SET status=$1 WHERE id=$2`, [status, id])
         const logic = `SELECT * FROM bookings b LEFT JOIN vehicles v ON b.vehicle_id=v.id WHERE b.id=$1`
-        const result = await bookingDate(logic,id,role,status)
+        const result = await bookingDate(logic, id, role, status)
         return result
     }
 
-
-    if(status=='returned' || status=='active'){
-        throw new Error('you just change cancelled status and admin change all status')
+    if (role == "customer" && status !== 'cancelled') {
+        const data = res.status(404).json({ sucess: false, message: "Customers can only cancel bookings" })
+        throw new Error(data)
     }
 
-    if(role=='customer'){
+    if (role == 'customer') {
         await pool.query(`UPDATE bookings SET status=$1 WHERE id=$2;`, [status, id])
+        await pool.query(`
+               UPDATE Vehicles SET availability_status='available' WHERE id=$1
+        `, [booking.vehicle_id])
         const logic = `SELECT * FROM bookings b LEFT JOIN vehicles v ON b.vehicle_id=v.id WHERE b.id=$1`
-        const result = await bookingDate(logic,id,role,status)
+        const result = await bookingDate(logic, id, role, status)
         return result
     }
 }
