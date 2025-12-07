@@ -9,7 +9,6 @@ router.get("/",vehicleController.getAllVehicles)
 router.get("/:id",vehicleController.getSingleVehicles)
 router.put("/:id",auth([Roles.Admin]),vehicleController.updateVehicles)
 router.delete("/:id",auth([Roles.Admin]),vehicleController.deleteVehicles)
-
 export const vehicleRouter = {
     router
 }

@@ -25,7 +25,7 @@ const updateUser=async(req:Request,res:Response)=>{
     const {role}:string |any=req.users;
     const {status}=req.body;
     try {
-        const result = await bookingsService.updateUser(id as string,role,status)
+        const result = await bookingsService.updateUser(id as string,role,status,res)
         res.status(200).json({sucess:true,message:"bookings update sucessfully",data:result})
     } catch (error:any) {
         res.status(500).json({sucess:false,message:"booking data update failed",ERROR:error.message})

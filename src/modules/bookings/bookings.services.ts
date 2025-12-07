@@ -140,6 +140,8 @@ const updateUser = async (id: string, role: string, status: string, res: any) =>
         return result
     }
 
+    
+
     if (role == "customer" && status !== 'cancelled') {
         const data = res.status(404).json({ sucess: false, message: "Customers can only cancel bookings" })
         throw new Error(data)
