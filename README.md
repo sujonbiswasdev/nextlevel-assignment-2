@@ -2,7 +2,7 @@
 
 GitHub Repo: [Repo Link](https://github.com/sujonbiswasdev/nextlevel-assignment-2.git)
 
-Live URL = [Repo Link](https://nextlevel-assignment-2.onrender.com)
+Live URL = [Repo Link](https://nextlevel-assignment-2.vercel.app)
 
 ##  Features
 ### Authentication & Authorization
