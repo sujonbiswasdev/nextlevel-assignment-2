@@ -24,7 +24,7 @@ Live URL = [Repo Link](https://nextlevelassignment2.vercel.app/)
 - Create booking (Admin/Customer)
 - GET – Get bookings (Admin = all bookings, Customer = own bookings)
 - PUT – Update booking status (Role-based: Admin/Customer)
-### Technology Stack
+## Technology Stack
 ####  **Backend**
 - Node.js  
 - TypeScript  
