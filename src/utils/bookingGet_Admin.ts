@@ -16,7 +16,7 @@ export const bookingget = async(logic:string)=>{
                 const start_rent = `${rent_start.getFullYear()}-${rentStart}${rent_start.getMonth() + 1}-${getdate_start}${rent_start.getDate()}`;
     
                 const end_rent = `${rent_end.getFullYear()}-${rentEnd}${rent_end.getMonth() + 1}-${getdate_end}${rent_end.getDate()}`;
-                const number_of_data: number = rent_end.getDay() - rent_start.getDay()
+                const number_of_data: number = rent_end.getDate() - rent_start.getDate()
                 const total_price: number = number_of_data * item.daily_rent_price;
                 console.log(item);
                 const data =
