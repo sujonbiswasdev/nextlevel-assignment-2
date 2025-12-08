@@ -25,7 +25,7 @@ app.use('/api/v1/users',userRouter.router)
 app.use('/api/v1/bookings',bookingsRouter.router)
 
 app.get('/', (req, res) => {
-  res.send('Hello World!')
+  res.send('Vehicle Rental System')
 })
 
 export default app

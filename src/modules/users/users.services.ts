@@ -1,10 +1,10 @@
 import { pool } from "../../config/DB"
 
 const getAllUser=async()=>{
+    // get all users but password will be remove
     const result=await pool.query(`
         SELECT * FROM users;
         `)
-
     for(let i=0;i<result.rows.length;i++){
          delete result.rows[i].password
     }
@@ -12,6 +12,7 @@ const getAllUser=async()=>{
 }
 
 const updateUser=async(name:string,email:string,phone:string,role:string,id:string)=>{
+    // update users table data
 
     if(role=='admin'||role=='customer'){
          
@@ -21,6 +22,7 @@ const updateUser=async(name:string,email:string,phone:string,role:string,id:stri
         `,[name,email,phone,role,id]
     )
     }
+// show users table data but password remove
     const result = await pool.query(`
         SELECT * FROM users WHERE id=$1
         `,[id])
@@ -30,20 +32,24 @@ const updateUser=async(name:string,email:string,phone:string,role:string,id:stri
 }
 
 const deleteUser=async(id:string)=>{
+    // check users no active bookings exist
     const result = await pool.query(`
         SELECT * FROM users INNER JOIN bookings ON users.id=bookings.customer_id WHERE customer_id=$1
         `,[id])   
+
+        // if bookings exits then status active doesn't remove users
         result.rows.some((item,index)=>{
             if(item.status=='active'){
                 throw new Error('bookings status active')
                 return 0;
             }
         })
-
+        
+        // get id users table
         const userall=await pool.query(`
             SELECT id FROM users
             `)
-
+            // find id users table and req.params and match id then delete users
          const id1=userall.rows.find((item,index)=>item.id==id)
          if(id1.id){
            await pool.query(
@@ -51,18 +57,9 @@ const deleteUser=async(id:string)=>{
             DELETE FROM users WHERE id=$1
             `,[id]
         )
-            
-
          }else{
             throw new Error('id is not match')
          }
-            
-        
-        // await pool.query(
-        //     `
-        //     DELETE FROM users WHERE id=$1
-        //     `,[id]
-        // )
 }
 
 export const userServices={

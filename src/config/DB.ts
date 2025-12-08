@@ -20,7 +20,7 @@ const initialDb=async()=>{
 
         // Vehicles table create
         await pool.query(`
-            CREATE TABLE IF NOT EXISTS Vehicles(
+            CREATE TABLE IF NOT EXISTS vehicles(
             id serial PRIMARY KEY,
             vehicle_name VARCHAR (50) NOT NULL,
             type VARCHAR (30) NOT NULL CHECK (type='car' OR type='bike' OR type='van' OR type='SUV'),
@@ -32,7 +32,7 @@ const initialDb=async()=>{
 
             // bookings table create
             await pool.query(`
-                CREATE TABLE IF NOT EXISTS Bookings(
+                CREATE TABLE IF NOT EXISTS bookings(
                 id serial PRIMARY KEY,
                 customer_id INT REFERENCES users(id) ON DELETE CASCADE,
                 vehicle_id INT REFERENCES Vehicles(id) ON DELETE CASCADE,

@@ -2,35 +2,40 @@ import { pool } from "../../config/DB";
 
 const createVehicles = async (payload: Record<string, unknown>) => {
     const { vehicle_name, type, registration_number, daily_rent_price, availability_status } = payload;
+
+    // insert vehicles table
     await pool.query(`
         INSERT INTO vehicles(vehicle_name,type,registration_number,daily_rent_price,availability_status)
 VALUES ($1,$2,$3,$4,$5)
         `, [vehicle_name, type, registration_number, daily_rent_price || 45, availability_status || "available"])
 
+        // show vehicles table data
     const result = await pool.query(`
         SELECT id,vehicle_name,type, registration_number,daily_rent_price,availability_status FROM vehicles WHERE registration_number=$1
-        `,[registration_number])
+        `, [registration_number])
     return result
 }
 
-const getAllVehicles=async()=>{
+const getAllVehicles = async () => {
+    // get vehicles table data
     const result = await pool.query(` 
         SELECT * FROM vehicles;
         `)
     return result
 }
 
-const getSingleVehicles=async(id:string)=>{
+const getSingleVehicles = async (id: string) => {
+    // signle get vehicles table data
     const result = await pool.query(`
         SELECT * FROM vehicles WHERE id=$1
-        `,[id])
+        `, [id])
     return result
 }
 
-const updateVehicles=async(vehicle_name:string,type:string,registration_number:string,daily_rent_price:string,availability_status:string,id:string,role:string)=>{
-
-   if(role=='admin'){
-     await pool.query(`
+const updateVehicles = async (vehicle_name: string, type: string, registration_number: string, daily_rent_price: string, availability_status: string, id: string, role: string) => {
+    // update vehicles table data
+    if (role == 'admin') {
+        await pool.query(`
         UPDATE vehicles
         SET vehicle_name = $1,
         type =$2, 
@@ -38,23 +43,24 @@ const updateVehicles=async(vehicle_name:string,type:string,registration_number:s
         daily_rent_price=$4,
         availability_status=$5
          WHERE id=$6;
-        `,[vehicle_name,type,registration_number,daily_rent_price,availability_status,id])
+        `, [vehicle_name, type, registration_number, daily_rent_price, availability_status, id])
 
         const result = await pool.query(`
             SELECT * FROM vehicles WHERE id=$1
-            `,[id])
+            `, [id])
 
         return result.rows
-   }
+    }
 }
 
-const deleteVehicles=async(id:string)=>{
+const deleteVehicles = async (id: string) => {
+    // delete vehicles table data
     await pool.query(`
         DELETE FROM vehicles WHERE id=$1
-        `,[id])
+        `, [id])
 }
 
-export const vehiclesServices={
+export const vehiclesServices = {
     createVehicles,
     getAllVehicles,
     getSingleVehicles,

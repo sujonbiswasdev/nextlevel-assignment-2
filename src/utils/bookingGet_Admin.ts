@@ -3,28 +3,18 @@ import { pool } from "../config/DB"
 export const bookingget = async(logic:string)=>{
      const alldata = await pool.query(logic)
         const admin = alldata.rows.map((item, index) => {
-                const rent_start = new Date(item.rent_start_date)
-                const rent_end = new Date(item.rent_end_date)
-                const getmonthStart = rent_start.getMonth().toString().length;
-                const rentStart = getmonthStart==1?"0":""
-                const getmonthEnd = rent_end.getMonth().toString().length;
-                const rentEnd = getmonthEnd==1?"0":""
-                const getdateStart=rent_start.getDate().toString().length;
-                const getdate_start = getdateStart==1?"0":""
-                const getdateEnd =rent_end.getDate().toString().length;
-                const getdate_end = getdateEnd==1?"0":""
-                const start_rent = `${rent_start.getFullYear()}-${rentStart}${rent_start.getMonth() + 1}-${getdate_start}${rent_start.getDate()}`;
-    
-                const end_rent = `${rent_end.getFullYear()}-${rentEnd}${rent_end.getMonth() + 1}-${getdate_end}${rent_end.getDate()}`;
-                const number_of_data: number = rent_end.getDate() - rent_start.getDate()
-                const total_price: number = number_of_data * item.daily_rent_price;
+                const rent_start = new Date(item.start_date)
+                const rent_end = new Date(item.end_date)
+                const number_time: number = rent_end.getTime() - rent_start.getTime()
+                const number_of_days = Math.ceil(number_time / (1000 * 60 * 60 * 24));
+                const total_price: number = number_of_days * item.daily_rent_price;
                 const data =
                 {
                     id: item.id,
                     customer_id: item.customer_id,
                     vehicle_id: item.vehicle_id,
-                    rent_start_date: start_rent,
-                    rent_end_date: end_rent,
+                    rent_start_date: item.start_date,
+                    rent_end_date: item.end_date,
                     total_price: total_price,
                     status: item.status,
                     customer: {
