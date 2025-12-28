@@ -6,9 +6,9 @@ const createUser=async(req:Request,res:Response)=>{
     const Email = email.toLowerCase();
     try {
         const result = await authServices.createUser(name,Email,password,phone,role)
-        res.status(201).json({sucess:true,message:"User registered successfully",data:result})
+        res.status(201).json({success:true,message:"User registered successfully",data:result})
     } catch (error:any) {
-        res.status(500).json({sucess:false,message:"User registered Failed",ERROR:error.message})
+        res.status(400).json({success:false,message:"User registered Failed",ERROR:error.message})
     }
 }
 
@@ -16,9 +16,9 @@ const loginUser=async(req:Request,res:Response)=>{
     const {email,password}= req.body;
     try {
         const result = await authServices.loginUser(email,password)
-        res.status(200).json({sucess:true,message:"Login successful",data:result})
+        res.status(200).json({success:true,message:"Login successful",data:result})
     } catch (error:any) {
-        res.status(500).json({sucess:false,message:"login failed",ERROR:error.message})
+        res.status(400).json({success:false,message:"login failed",ERROR:error.message})
     }
 }
 

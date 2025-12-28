@@ -13,8 +13,8 @@ const initialDb=async()=>{
          name VARCHAR (50) NOT NULL,
          email VARCHAR (50) UNIQUE NOT NULL,
          password TEXT NOT NULL,
-         phone INT NOT NULL,
-         role VARCHAR (50) NOT NULL CHECK (role='admin' OR role='customer')
+         phone VARCHAR (50) NOT NULL,
+         role VARCHAR (50) NOT NULL CHECK (role in ('admin','customer'))
         )
         `)
 
@@ -23,10 +23,10 @@ const initialDb=async()=>{
             CREATE TABLE IF NOT EXISTS vehicles(
             id serial PRIMARY KEY,
             vehicle_name VARCHAR (50) NOT NULL,
-            type VARCHAR (30) NOT NULL CHECK (type='car' OR type='bike' OR type='van' OR type='SUV'),
+            type VARCHAR (30) NOT NULL CHECK ( type in ('car','bike','van','SUV')),
             registration_number VARCHAR (100) UNIQUE NOT NULL,
-            daily_rent_price INT NOT NULL CHECK (daily_rent_price>0),
-            availability_status VARCHAR (60) CHECK (availability_status='available' OR availability_status='booked')
+            daily_rent_price BIGINT NOT NULL CHECK (daily_rent_price>0),
+            availability_status VARCHAR (60) NOT NULL CHECK (availability_status in('available','booked'))
             )
             `)
 
@@ -35,11 +35,11 @@ const initialDb=async()=>{
                 CREATE TABLE IF NOT EXISTS bookings(
                 id serial PRIMARY KEY,
                 customer_id INT REFERENCES users(id) ON DELETE CASCADE,
-                vehicle_id INT REFERENCES Vehicles(id) ON DELETE CASCADE,
-                rent_start_date DATE NOT NULL CHECK (rent_start_date>'2024-01-01'),
+                vehicle_id INT REFERENCES vehicles(id) ON DELETE CASCADE,
+                rent_start_date DATE NOT NULL,
                 rent_end_date DATE NOT NULL CHECK (rent_end_date>rent_start_date),
-                total_price INT CHECK (total_price>0),
-                status VARCHAR (50) NOT NULL CHECK (status='active' OR status='cancelled' OR status='returned')
+                total_price BIGINT NOT NULL CHECK (total_price>0),
+                status VARCHAR (50) NOT NULL CHECK (status in ('active','cancelled','returned'))
                 )
                 `)
 }

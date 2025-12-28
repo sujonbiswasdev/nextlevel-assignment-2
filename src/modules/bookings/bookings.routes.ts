@@ -5,8 +5,8 @@ import { Roles } from "../../middleware/auth.const";
 
 const router = Router();
 router.post('/',auth([Roles.Admin,Roles.Customer]),bookingController.bookingsCreate)
-router.get('/',auth([Roles.Admin,Roles.Customer]),bookingController.getUser)
-router.put('/:id',auth([Roles.Admin,Roles.Customer]),bookingController.updateUser)
+router.get('/',auth([Roles.Admin,Roles.Customer]),bookingController.getBookings)
+router.put('/:id',auth([Roles.Admin,Roles.Customer]),bookingController.updateBookings)
 
 export const bookingsRouter={
     router

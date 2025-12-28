@@ -41,7 +41,6 @@ const deleteUser=async(id:string)=>{
         result.rows.some((item,index)=>{
             if(item.status=='active'){
                 throw new Error('bookings status active')
-                return 0;
             }
         })
         

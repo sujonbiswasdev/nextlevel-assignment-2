@@ -9,37 +9,38 @@ const createUser=async(name:string,email:string,password:string | any,phone:stri
     // pasword check
     if(password.length<6){
         throw new Error('password length at least 6 character')
-        return 0;
     }
-
+    const emaillower=email.toLowerCase()
     // generate hashind password
     const hashpassword = bcrypt.hashSync(password as string, 10);
-    type Acess="admin" | "customer"
-    const acess:Acess= role as Acess
+    if (!['admin', 'customer'].includes(role)) {
+        throw new Error('Role must be "admin" or "customer"');
+    }
     // insert user information
    await pool.query(`
-        INSERT INTO users (name,email,password,phone,role)
+        INSERT INTO users (name,LOWER(email),password,phone,role)
         VALUES ($1,$2,$3,$4,$5);
-        `,[name,email,hashpassword,phone,acess||"customer"])
+        `,[name,emaillower,hashpassword,phone,role])
 
         // show users information
     const result = await pool.query(
-        `SELECT id,name,LOWER(email) AS email,phone,role FROM users WHERE email=$1`,[email]
+        `SELECT id,name,LOWER(email) AS email,phone,role FROM users WHERE LOWER(email)=$1`,[email.toLowerCase()]
     )
-    return result.rows;
+    return result.rows[0];
 }
 // login user
 const loginUser=async(email:string,password:string)=>{
     // select users
     const result = await pool.query(`
-        SELECT * FROM users WHERE email=$1
-        `,[email])
+        SELECT * FROM users WHERE LOWER(email)=$1
+        `,[email.toLowerCase()])
         const user = result.rows[0]
         // compare password
+
        const match= await bcrypt.compare(password, user.password); 
     //    match password
        if(!match){
-        return `your password not valid`
+        throw new Error(`your password not valid`)
        }
     //    delete password
        delete user.password

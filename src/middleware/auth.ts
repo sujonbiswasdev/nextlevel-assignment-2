@@ -7,17 +7,15 @@ const auth=(roles:string[])=>{
         const token = req.headers.authorization
         // if token is not found then throw error
         if(!token){
-             const data= res.status(401).json({sucess:false,message:"you are not authorized"})
-               throw new Error(data as any)
-               return;
+           return  res.status(401).json({success:false,message:"you are not authorized"})
+               
         }
         // decode users using jwt
         const decoded = jwt.verify(token as string, config.jwt_secret as string) as JwtPayload;
         // if decode user is invalid then throw new error
         if(!decoded){
-           const data= res.status(400).json({sucess:false,message:"you are not valid"})
-            throw new Error(data as any)
-             return;
+          return res.status(400).json({success:false,message:"you are not valid"})
+          
         }
         // global variable declear for example req.users
         req.users=decoded
@@ -27,15 +25,13 @@ const auth=(roles:string[])=>{
             `,[decoded.email])
             // users length 0 then throw new error
         if(users.rows.length===0){
-           const data =  res.status(404).json({sucess:false,message:"token users not found"})
-           throw new Error(data as any)
-            return;
+          return res.status(404).json({success:false,message:"token users not found"})
+           
         }
         // user check if user isn't role match then throw new Error
         if(roles.length && !roles.includes(decoded.role)){
-           const data= res.status(404).json({sucess:false,message:"permition not valid"})
-            throw new Error(data as any)
-            return;
+          return res.status(404).json({success:false,message:"permition not valid"})
+            
         }
         // next funtion working
         next()

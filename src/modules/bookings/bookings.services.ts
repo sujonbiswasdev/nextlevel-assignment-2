@@ -108,7 +108,6 @@ const getBooking = async (id: string, role: string) => {
     // check bookings data is not found then thow new Error
     if (result.rows.length === 0) {
         throw new Error('bookings data not found')
-        return
     }
 
     // right now structured create 
@@ -139,14 +138,12 @@ const getBooking = async (id: string, role: string) => {
     return customer
 }
 
-const updateBooking = async (id: string, role: string, status: string, res: any) => {
+const updateBooking = async (id: string, role: string, status: string) => {
     // check 
     const statusarr = ['active', 'cancelled', 'returned']
     // active and cancelled ,returned is not include then thow new error
     if (!statusarr.includes(status)) {
-       const error= res.status(404).json({success:false,messge:`Enter status must be active,cancelled,returned`})
-        throw new Error(error)
-        return 0;
+        throw new Error(`Enter status must be active,cancelled,returned`)
     }
 
     // bookings data check
@@ -155,10 +152,7 @@ const updateBooking = async (id: string, role: string, status: string, res: any)
         [id]
     );
     if (bookingRes.rowCount === 0) {
-        return res.status(404).json({
-            success: false,
-            message: "Booking not found",
-        });
+        throw new Error("Booking not found")
     }
 // if bookings data exits then variable booking data include
     const booking = bookingRes.rows[0];
@@ -210,8 +204,7 @@ const updateBooking = async (id: string, role: string, status: string, res: any)
         throw new Error('you isn\' change just cancelled change')
     }
     if (role == "customer" && status !== 'cancelled') {
-        const data = res.status(404).json({ sucess: false, message: "Customers can only cancel bookings" })
-        throw new Error(data)
+        throw new Error("Customers can only cancel bookings")
     }
 
     // customer status cancelled before must conditon pass
@@ -227,8 +220,7 @@ const updateBooking = async (id: string, role: string, status: string, res: any)
     const number_time_start = startD.getTime()
     // condition
     if (number_time_now > number_time_start) {
-        const data = res.status(400).json({ sucess: false, message: "Cancel booking before start date only" })
-        throw new Error(data)
+        throw new Error("Cancel booking before start date only")
     }
     // if role is customer then functionality work
     if (role == 'customer') {
