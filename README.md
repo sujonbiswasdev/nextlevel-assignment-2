@@ -10,18 +10,18 @@ Live URL = [Repo Link](https://nextlevel-assignment-2.vercel.app)
 - Password hashing using bcrypt
 - Role-based access control (Admin & Customer)
 
-### Vehicle Management
+### Vehicles Management
 - POST – Add new vehicle (Admin only)
 - GET – Get all vehicles (Public)
 - GET – Get single vehicle by ID (Public)
 - PUT – Update vehicle (Admin only)
 - DELETE – Delete vehicle (Admin only)
-### User Management
+### Users Management
  - GET – All users (Admin only)
  - PUT – Update user (Admin or Own)
  - DELETE – Delete user (Admin only)
-### Booking System
-- Create booking (Admin/Customer)
+### Bookings System
+- POST – Create booking (Admin/Customer)
 - GET – Get bookings (Admin = all bookings, Customer = own bookings)
 - PUT – Update booking status (Role-based: Admin/Customer)
 ## Technology Stack
