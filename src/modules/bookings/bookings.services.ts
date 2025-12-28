@@ -102,7 +102,7 @@ const getBooking = async (id: string, role: string) => {
 
     // show information using query
     const result = await pool.query(`
-           SELECT ${bookings_cus},${vehicles_cus} FROM bookings FULL JOIN vehicles ON bookings.vehicle_id=vehicles.id WHERE customer_id=$1
+           SELECT ${bookings_cus},${vehicles_cus} FROM bookings INNER JOIN vehicles ON bookings.vehicle_id=vehicles.id WHERE customer_id=$1
     `, [id])
 
     // check bookings data is not found then thow new Error
