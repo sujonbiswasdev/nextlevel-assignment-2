@@ -183,7 +183,7 @@ const updateBooking = async (id: string, role: string, status: string) => {
         // customise table query
 
         // bookings get
-        const bookings_admin = `b.id,b.vehicle_id,b.status ,TO_CHAR(b.rent_start_date, 'YYYY-MM-DD') AS start_date ,TO_CHAR(b.rent_end_date, 'YYYY-MM-DD') AS end_date`
+        const bookings_admin = `b.id,b.customer_id,b.vehicle_id,b.status ,TO_CHAR(b.rent_start_date, 'YYYY-MM-DD') AS start_date ,TO_CHAR(b.rent_end_date, 'YYYY-MM-DD') AS end_date`
         // vehicles get
         const vehicles_admin = `
           v.daily_rent_price,
@@ -236,7 +236,7 @@ const updateBooking = async (id: string, role: string, status: string) => {
         // customise query
 
         // bookings get
-        const bookings_cus = `b.id,b.vehicle_id,b.status ,TO_CHAR(b.rent_start_date, 'YYYY-MM-DD') AS start_date ,TO_CHAR(b.rent_end_date, 'YYYY-MM-DD') AS end_date`
+        const bookings_cus = `b.id,b.customer_id,b.vehicle_id,b.status ,TO_CHAR(b.rent_start_date, 'YYYY-MM-DD') AS start_date ,TO_CHAR(b.rent_end_date, 'YYYY-MM-DD') AS end_date`
         // vehicles table data get
         const vehicles_customer = `v.vehicle_name,
           v.daily_rent_price,
