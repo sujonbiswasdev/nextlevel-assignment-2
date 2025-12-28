@@ -18,13 +18,13 @@ const createUser=async(name:string,email:string,password:string | any,phone:stri
     }
     // insert user information
    await pool.query(`
-        INSERT INTO users (name,LOWER(email),password,phone,role)
+        INSERT INTO users (name,email,password,phone,role)
         VALUES ($1,$2,$3,$4,$5);
         `,[name,emaillower,hashpassword,phone,role])
 
         // show users information
     const result = await pool.query(
-        `SELECT id,name,LOWER(email) AS email,phone,role FROM users WHERE LOWER(email)=$1`,[email.toLowerCase()]
+        `SELECT id,name,email,phone,role FROM users WHERE LOWER(email)=$1`,[email.toLowerCase()]
     )
     return result.rows[0];
 }
@@ -32,7 +32,7 @@ const createUser=async(name:string,email:string,password:string | any,phone:stri
 const loginUser=async(email:string,password:string)=>{
     // select users
     const result = await pool.query(`
-        SELECT * FROM users WHERE LOWER(email)=$1
+        SELECT * FROM users WHERE email=$1
         `,[email.toLowerCase()])
         const user = result.rows[0]
         // compare password
