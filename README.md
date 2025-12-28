@@ -50,7 +50,7 @@ Create .env file:
 ```env
 PORT=5000
 DATABASE_URL=your_postgres_connection_url
-JWT_secret=your_jwt_secret
+JWT_SECRET=your_jwt_secret
 
 ```
 

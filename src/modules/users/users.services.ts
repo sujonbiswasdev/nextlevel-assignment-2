@@ -12,8 +12,10 @@ const getAllUser=async()=>{
 }
 
 const updateUser=async(name:string,email:string,phone:string,role:string,id:string)=>{
+    if(!name || !email || !phone || !role){
+        throw new Error("input must be name,email,phone,role");
+    }
     // update users table data
-
     if(role=='admin'||role=='customer'){
          
         await pool.query(

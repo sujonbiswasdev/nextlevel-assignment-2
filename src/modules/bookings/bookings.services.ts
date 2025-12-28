@@ -51,7 +51,7 @@ const bookingsCreate = async (payload: Record<string, unknown>) => {
     // manual roles create becaues reusable information
     let roles = 'create'
     // customise in quary 
-    const bookings_info = `b.id,b.vehicle_id,b.status ,TO_CHAR(b.rent_start_date, 'YYYY-MM-DD') AS start_date ,TO_CHAR(b.rent_end_date, 'YYYY-MM-DD') AS end_date`
+    const bookings_info = `b.id,b.customer_id,b.vehicle_id,b.status ,TO_CHAR(b.rent_start_date, 'YYYY-MM-DD') AS start_date ,TO_CHAR(b.rent_end_date, 'YYYY-MM-DD') AS end_date`
     // vehicles 
     const vehicles_info = `v.vehicle_name,
           v.daily_rent_price
@@ -71,7 +71,7 @@ const getBooking = async (id: string, role: string) => {
     // admin view 
     if (role == 'admin') {
         // bookings table data get using query
-        const bookings_admin = `bookings.id,bookings.vehicle_id,bookings.status ,TO_CHAR(rent_start_date, 'YYYY-MM-DD') AS start_date ,TO_CHAR(rent_end_date, 'YYYY-MM-DD') AS end_date`
+        const bookings_admin = `bookings.id,bookings.customer_id,bookings.vehicle_id,bookings.status ,TO_CHAR(rent_start_date, 'YYYY-MM-DD') AS start_date ,TO_CHAR(rent_end_date, 'YYYY-MM-DD') AS end_date`
         // users table data get using query
         const users_admin = `users.name AS customer_name,
            users.email AS customer_email`

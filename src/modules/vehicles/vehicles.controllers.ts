@@ -4,7 +4,7 @@ const createVehicles=async(req:Request,res:Response)=>{
   
     try {
         const result = await vehiclesServices.createVehicles(req.body)
-        res.status(201).json({success:true,message:"Vehicle created successfully",data:result.rows[0]})
+        res.status(201).json({success:true,message:"Vehicle created successfully",data:result})
     } catch (error:any) {
         res.status(400).json({success:false,message:"vehicle create failed",ERROR:error.message})
     }

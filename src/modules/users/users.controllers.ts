@@ -17,7 +17,7 @@ const updateUser=async(req:Request,res:Response)=>{
         const result = await userServices.updateUser(name,email,phone,role,id as string)
         res.status(200).json({sucess:true,message:"User updated successfully",data:result.rows})
     } catch (error:any) {
-        res.status(500).json({sucess:false,message:"update failed",ERROR:error.message})
+        res.status(400).json({sucess:false,message:"update failed",ERROR:error.message})
     }
 }
 

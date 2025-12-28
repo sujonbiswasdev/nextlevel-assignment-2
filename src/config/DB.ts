@@ -15,6 +15,7 @@ const initialDb=async()=>{
          password TEXT NOT NULL,
          phone VARCHAR (50) NOT NULL,
          role VARCHAR (50) NOT NULL CHECK (role in ('admin','customer'))
+    )
         `)
 
         // Vehicles table create
@@ -26,6 +27,7 @@ const initialDb=async()=>{
             registration_number VARCHAR (100) UNIQUE NOT NULL,
             daily_rent_price BIGINT NOT NULL CHECK (daily_rent_price>0),
             availability_status VARCHAR (60) NOT NULL CHECK (availability_status in('available','booked'))
+        )
             `)
 
             // bookings table create
@@ -38,6 +40,7 @@ const initialDb=async()=>{
                 rent_end_date DATE NOT NULL CHECK (rent_end_date>rent_start_date),
                 total_price BIGINT NOT NULL CHECK (total_price>0),
                 status VARCHAR (50) NOT NULL CHECK (status in ('active','cancelled','returned'))
+            )
                 `)
 }
 export default initialDb

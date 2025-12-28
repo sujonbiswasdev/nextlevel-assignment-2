@@ -24,7 +24,7 @@ const createUser=async(name:string,email:string,password:string | any,phone:stri
 
         // show users information
     const result = await pool.query(
-        `SELECT id,name,email,phone,role FROM users WHERE LOWER(email)=$1`,[email.toLowerCase()]
+        `SELECT id,name,email,phone,role FROM users WHERE email=$1`,[email.toLowerCase()]
     )
     return result.rows[0];
 }
