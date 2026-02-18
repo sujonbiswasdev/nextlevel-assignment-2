@@ -41,7 +41,7 @@ const updateUser=async(userrole:string,id:number,name?:string,email?:string,phon
         `,[updateduser.name,updateduser.email,updateduser.phone,id]
     )
     delete result.rows[0].password
-    return result
+    return result.rows
     }
 }
 
