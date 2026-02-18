@@ -43,6 +43,8 @@ const loginUser=async(email:string,password:string)=>{
         throw new Error(`your password not valid`)
        }
 
+       delete user.password
+
     //    token generate
        const token= jwt.sign({name:user.name,phone:user.phone,email:user.email,role:user.role
        },config.jwt_secret as string, { expiresIn: '60d' });
