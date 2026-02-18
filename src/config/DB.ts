@@ -1,5 +1,5 @@
 import { Pool } from 'pg'
-import config from './config'
+import config from './config.js'
 
 
 export const pool = new Pool({
@@ -13,8 +13,8 @@ const initialDb=async()=>{
          name VARCHAR (50) NOT NULL,
          email VARCHAR (50) UNIQUE NOT NULL,
          password TEXT NOT NULL,
-         phone VARCHAR (50) NOT NULL,
-         role VARCHAR (50) NOT NULL CHECK (role in ('admin','customer'))
+         phone VARCHAR (15) NOT NULL,
+         role VARCHAR (15) NOT NULL CHECK (role in ('admin','customer'))
     )
         `)
 
@@ -23,9 +23,9 @@ const initialDb=async()=>{
             CREATE TABLE IF NOT EXISTS vehicles(
             id serial PRIMARY KEY,
             vehicle_name VARCHAR (50) NOT NULL,
-            type VARCHAR (30) NOT NULL CHECK ( type in ('car','bike','van','SUV')),
+            type VARCHAR (15) NOT NULL CHECK ( type in ('car','bike','van','SUV')),
             registration_number VARCHAR (100) UNIQUE NOT NULL,
-            daily_rent_price BIGINT NOT NULL CHECK (daily_rent_price>0),
+            daily_rent_price INT NOT NULL CHECK (daily_rent_price>0),
             availability_status VARCHAR (60) NOT NULL CHECK (availability_status in('available','booked'))
         )
             `)

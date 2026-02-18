@@ -1,11 +1,10 @@
 import { Request, Response } from "express";
-import { authServices } from "./auth.services";
+import { authServices } from "./auth.services.js";
 
 const createUser=async(req:Request,res:Response)=>{
     const {name,email,password,phone,role}=req.body;
-    const Email = email.toLowerCase();
     try {
-        const result = await authServices.createUser(name,Email,password,phone,role)
+        const result = await authServices.createUser(name,email,password,phone,role)
         res.status(201).json({success:true,message:"User registered successfully",data:result})
     } catch (error:any) {
         res.status(400).json({success:false,message:"User registered Failed",ERROR:error.message})

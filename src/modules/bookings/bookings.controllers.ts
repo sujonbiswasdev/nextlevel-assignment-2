@@ -1,18 +1,24 @@
 import { Request, Response } from "express";
-import { bookingsService } from "./bookings.services";
+import { bookingsService } from "./bookings.services.js";
+import { JwtPayload } from "jsonwebtoken";
 const bookingsCreate=async(req:Request,res:Response)=>{
     try {
+        const user=req.user
+        if(!user){
+            return res.status(401).json({ success: false, message: "you are unauthorized" })
+        }
         const result  = await bookingsService.bookingsCreate(req.body);
-        res.status(201).json({sucess:true,message:"Booking created successfully",data:result})
+       return res.status(201).json({sucess:true,message:"Booking created successfully",data:result})
     } catch (error:any) {
         res.status(400).json({sucess:false,message:"bookings create failed",ERROR:error.message})
     }
 }
 
-const getBookings=async(req:Request,res:Response)=>{
-    const {id,role}:string|any=req.users;
+const getAllBooking=async(req:Request,res:Response)=>{
+    const {email,role}=req.user as JwtPayload;
+    console.log(req.user,'user')
     try {
-        const result = await bookingsService.getBooking(id,role)
+        const result = await bookingsService.getAllBooking(email,role)
         res.status(200).json({sucess:true,message:"Bookings retrieved successfully",data:result})
     } catch (error:any){
         res.status(500).json({sucess:false,message:"booking get failed",ERROR:error.message})
@@ -22,7 +28,7 @@ const getBookings=async(req:Request,res:Response)=>{
 
 const updateBookings=async(req:Request,res:Response)=>{
     const {id} = req.params;
-    const {role}:string |any=req.users;
+    const {role}=req.user as JwtPayload;
     const {status}=req.body;
     try {
         const result = await bookingsService.updateBooking(id as string,role,status)
@@ -35,6 +41,6 @@ const updateBookings=async(req:Request,res:Response)=>{
 
 export const bookingController={
     bookingsCreate,
-    getBookings,
+    getAllBooking,
     updateBookings
 }

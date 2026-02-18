@@ -1,7 +1,11 @@
+import { pool } from "../config/DB.js"
+import { autoReturnExpiredBookings } from "../helper/bookingsReusable.js"
 
-export const bookingDate = async (logic: string,id1:string, role?: string, status?: string) => {
+export const BookingResponse = async (getdata: any,method?: string) => {
 
-    const { id, start_date, end_date, daily_rent_price, availability_status, vehicle_name, customer_id, vehicle_id }: any = logic
+    const { id, start_date, end_date, daily_rent_price, availability_status, vehicle_name, customer_id, vehicle_id,status } = getdata
+
+    
 
     // ..........total price and start,end date to take out
     const rent_start = new Date(start_date)
@@ -11,12 +15,12 @@ export const bookingDate = async (logic: string,id1:string, role?: string, statu
     const total_price: number = number_of_days *daily_rent_price;
     // if role is admin then add vehicle
     let vehicle: any = ''
-    if (role == 'admin') {
+    if (method == 'updateAdmin') {
         vehicle = { "availability_status": availability_status }
     }
     // if role is create that's mean bookings add then below information is show
     let post: any = ''
-    if (role == 'create') {
+    if (method == 'post') {
         post = {
             vehicle_name: vehicle_name,
             daily_rent_price: daily_rent_price
@@ -24,19 +28,19 @@ export const bookingDate = async (logic: string,id1:string, role?: string, statu
     }
 
     // bookings structured maintaince
-    const info = {
-        id: Number(id || id1),
+    const result = {
+        id: Number(id),
         customer_id: customer_id,
         vehicle_id: vehicle_id,
         rent_start_date: start_date,
         rent_end_date: end_date,
         total_price: total_price,
-        status: status || "active",
-        vehicle: role === 'admin' ? vehicle
-            : role === 'create' ? post
+        status: status,
+        vehicle: method === 'updateAdmin' ? vehicle
+            : method === 'post' ? post
                 : undefined
     }
-    return info
+    return result
 }
 
 

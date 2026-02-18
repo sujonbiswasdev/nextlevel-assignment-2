@@ -1,9 +1,9 @@
 import express from 'express'
-import initialDb from './config/DB'
-import { authRouters } from './modules/auth/auth.routes'
-import { vehicleRouter } from './modules/vehicles/vehicles.routes'
-import { userRouter } from './modules/users/users.routes'
-import { bookingsRouter } from './modules/bookings/bookings.routes'
+import initialDb from './config/DB.js'
+import { authRouters } from './modules/auth/auth.routes.js'
+import { vehicleRouter } from './modules/vehicles/vehicles.routes.js'
+import { userRouter } from './modules/users/users.routes.js'
+import { bookingsRouter } from './modules/bookings/bookings.routes.js'
 const app = express()
 
 // middleware

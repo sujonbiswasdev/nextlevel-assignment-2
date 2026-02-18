@@ -1,4 +1,5 @@
-import { pool } from "../../config/DB"
+import { pool } from "../../config/DB.js"
+
 
 const getAllUser=async()=>{
     // get all users but password will be remove
@@ -11,26 +12,37 @@ const getAllUser=async()=>{
     return result
 }
 
-const updateUser=async(name:string,email:string,phone:string,role:string,id:string)=>{
-    if(!name || !email || !phone || !role){
-        throw new Error("input must be name,email,phone,role");
-    }
-    // update users table data
-    if(role=='admin'||role=='customer'){
-         
-        await pool.query(
-        `
-        UPDATE users SET name=$1,email=$2,phone=$3,role=$4 WHERE id=$5
-        `,[name,email,phone,role,id]
-    )
-    }
-// show users table data but password remove
-    const result = await pool.query(`
-        SELECT * FROM users WHERE id=$1
-        `,[id])
+const updateUser=async(userrole:string,id:number,name?:string,email?:string,phone?:string,role?:string)=>{
+  
+  const existing = await pool.query(`SELECT * FROM users WHERE id=$1`, [id]);
+    if (existing.rows.length === 0) throw new Error("user not found");
+    const user = existing.rows[0];
 
-        delete result.rows[0].password
-        return result
+       const updateduser ={
+        role:role ?? user.role,
+        name: name ?? user.name,
+        email: email ?? user.email,
+        phone: phone ?? user.phone
+    };
+    // update users table data
+    if(userrole=='admin'){
+      const result =  await pool.query(
+        `
+        UPDATE users SET name=$1,email=$2,phone=$3,role=$4 WHERE id=$5 RETURNING *
+        `,[updateduser.name,updateduser.email,updateduser.phone,updateduser.role,id]
+    )
+    delete result.rows[0].password
+    return result
+    }
+      if(userrole=='customer'){
+      const result =  await pool.query(
+        `
+        UPDATE users SET name=$1,email=$2,phone=$3 WHERE id=$4 RETURNING *
+        `,[updateduser.name,updateduser.email,updateduser.phone,id]
+    )
+    delete result.rows[0].password
+    return result
+    }
 }
 
 const deleteUser=async(id:string)=>{
@@ -59,7 +71,7 @@ const deleteUser=async(id:string)=>{
             `,[id]
         )
          }else{
-            throw new Error('id is not match')
+            throw new Error('user not found by id')
          }
 }
 

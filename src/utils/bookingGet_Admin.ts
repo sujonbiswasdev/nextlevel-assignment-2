@@ -1,4 +1,5 @@
-import { pool } from "../config/DB"
+import { pool } from "../config/DB.js"
+
 
 export const bookingget = async(logic:string)=>{
      const alldata = await pool.query(logic)

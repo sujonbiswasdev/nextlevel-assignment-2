@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { userController } from './users.controllers';
-import auth from '../../middleware/auth';
-import { Roles } from '../../middleware/auth.const';
+import { userController } from './users.controllers.js';
+import auth from '../../middleware/auth.js';
+import { Roles } from '../../middleware/auth.const.js';
 
 const router = Router()
 router.get("/",auth([Roles.Admin]),userController.getAllUser)

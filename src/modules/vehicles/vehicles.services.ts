@@ -1,8 +1,19 @@
-import { pool } from "../../config/DB";
+import { JwtPayload } from "jsonwebtoken";
+import { pool } from "../../config/DB.js";
+import { CreateVehiclePayload, UpdateVehiclePayload } from "../../type/vehicles.js";
 
-const createVehicles = async (payload: Record<string, unknown>) => {
-    const { vehicle_name, type, registration_number, daily_rent_price, availability_status } = payload;
-
+const createVehicles = async ({
+    vehicle_name,
+    type,
+    registration_number,
+    daily_rent_price,
+    availability_status,
+}: CreateVehiclePayload,
+    user: JwtPayload) => {
+    const { role } = user
+    if (role !== "admin") {
+        throw new Error("Only admin can create vehicles");
+    }
     if (!['available', 'booked'].includes(availability_status as string)) {
         throw new Error(`Availability status must be "available" or "booked"`);
     }
@@ -10,15 +21,12 @@ const createVehicles = async (payload: Record<string, unknown>) => {
         throw new Error('Vehicle type must be car, bike, van, or SUV');
     }
     // insert vehicles table
-    await pool.query(`
-        INSERT INTO vehicles(vehicle_name,type,registration_number,daily_rent_price,availability_status)
-VALUES ($1,$2,$3,$4,$5)
-        `, [vehicle_name, type, registration_number, daily_rent_price || 45, availability_status || "available"])
 
-    // show vehicles table data
     const result = await pool.query(`
-        SELECT id,vehicle_name,type, registration_number,daily_rent_price,availability_status FROM vehicles WHERE registration_number=$1
-        `, [registration_number])
+        INSERT INTO vehicles(vehicle_name,type,registration_number,daily_rent_price,availability_status)
+VALUES ($1,$2,$3,$4,$5) RETURNING *;
+        `, [vehicle_name, type, registration_number, Number(daily_rent_price) || Number(45), availability_status || "available"])
+
     return result.rows[0]
 }
 
@@ -30,7 +38,7 @@ const getAllVehicles = async () => {
     return result
 }
 
-const getSingleVehicles = async (id: string) => {
+const getSingleVehicles = async (id: number) => {
     // signle get vehicles table data
     const result = await pool.query(`
         SELECT * FROM vehicles WHERE id=$1
@@ -38,7 +46,19 @@ const getSingleVehicles = async (id: string) => {
     return result
 }
 
-const updateVehicles = async (vehicle_name: string, type: string, registration_number: string, daily_rent_price: string, availability_status: string, id: string, role: string) => {
+const updateVehicles = async (payload: { vehicle_name?: string, type?: string, registration_number?: string, daily_rent_price?: number, availability_status?: string }, role: string, vehicleid: number) => {
+    const existing = await pool.query(`SELECT * FROM vehicles WHERE id=$1`, [vehicleid]);
+    if (existing.rows.length === 0) throw new Error("Vehicle not found");
+    const vehicle = existing.rows[0];
+
+    const updatedVehicle = {
+        vehicle_name: payload.vehicle_name ?? vehicle.vehicle_name,
+        type: payload.type ?? vehicle.type,
+        registration_number: payload.registration_number ?? vehicle.registration_number,
+        daily_rent_price: payload.daily_rent_price ?? vehicle.daily_rent_price,
+        availability_status: payload.availability_status ?? vehicle.availability_status,
+    };
+
     // update vehicles table data
     if (role == 'admin') {
         await pool.query(`
@@ -49,26 +69,30 @@ const updateVehicles = async (vehicle_name: string, type: string, registration_n
         daily_rent_price=$4,
         availability_status=$5
          WHERE id=$6;
-        `, [vehicle_name, type, registration_number, daily_rent_price, availability_status, id])
+        `, [updatedVehicle.vehicle_name, updatedVehicle.type, updatedVehicle.registration_number, updatedVehicle.daily_rent_price, updatedVehicle.availability_status, vehicleid])
 
         const result = await pool.query(`
             SELECT * FROM vehicles WHERE id=$1
-            `, [id])
+            `, [vehicleid])
 
         return result.rows[0]
     }
 }
 
-const deleteVehicles = async (id: string) => {
+const deleteVehicles = async (id: number) => {
 
     // 5. deleteVehicles আগে:
     const bookings = await pool.query(`SELECT 1 FROM bookings WHERE vehicle_id=$1 AND status='active'`, [id]);
     if (bookings.rows.length > 0) throw new Error('Cannot delete vehicle with active bookings');
 
     // delete vehicles table data
-    await pool.query(`
+    const result = await pool.query(`
         DELETE FROM vehicles WHERE id=$1
         `, [id])
+    if (result.rowCount == 0) {
+        throw new Error("vehicle not found")
+    }
+    return result
 }
 
 export const vehiclesServices = {
