@@ -9,7 +9,7 @@ const getAllUser = async (req: Request, res: Response) => {
             return res.status(401).json({ success: false, message: "you are unauthorized" })
         }
         const result = await userServices.getAllUser()
-        res.status(200).json({ sucess: true, message: "Users retrieved successfully", data: result })
+        res.status(200).json({ sucess: true, message: "Users retrieved successfully", data: result.rows })
     } catch (error: any) {
         res.status(500).json({ sucess: false, message: "User not found", ERROR: error.message })
     }
