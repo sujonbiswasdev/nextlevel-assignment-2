@@ -7,45 +7,50 @@ import { BookingResponse } from "../../utils/bookingresponse.js";
 
 
 const bookingsCreate = async ({ customer_id, vehicle_id, rent_start_date, rent_end_date, total_price, status }: CreateBookingPayload) => {
-    // exist vehicles
-    await checkVehicleExists(vehicle_id)
-    // exist user
-    await checkUserExists(customer_id)
+  // exist vehicles
+  await checkVehicleExists(vehicle_id)
+  // exist user
+  await checkUserExists(customer_id)
 
-      const existingBooking = await pool.query(`SELECT 1 FROM bookings WHERE status='active' AND vehicle_id=$1`, [vehicle_id]);
-    if (existingBooking.rowCount! > 0) throw new Error("This vehicle is already booked");
+  const existingBooking = await pool.query(`SELECT 1 FROM bookings WHERE status='active' AND vehicle_id=$1`, [vehicle_id]);
+  if (existingBooking.rowCount! > 0) throw new Error("This vehicle is already booked");
 
-    // otherwise bookings data insert
-      const insertRes = await pool.query(
-        `INSERT INTO bookings(customer_id, vehicle_id, rent_start_date, rent_end_date, total_price, status) 
+  // otherwise bookings data insert
+  const insertRes = await pool.query(
+    `INSERT INTO bookings(customer_id, vehicle_id, rent_start_date, rent_end_date, total_price, status) 
          VALUES($1,$2,$3,$4,$5,$6) RETURNING id`,
-        [customer_id, vehicle_id, rent_start_date, rent_end_date, total_price || 5, status || 'active']
-    );
-    const id = insertRes.rows[0].id;
+    [customer_id, vehicle_id, rent_start_date, rent_end_date, total_price || 5, status || 'active']
+  );
+  const id = insertRes.rows[0].id;
 
-    // calculation
-    const vehicle = await pool.query(`SELECT daily_rent_price FROM vehicles WHERE id=$1`, [vehicle_id]);
+  // calculation
+  const vehicle = await pool.query(`SELECT daily_rent_price FROM vehicles WHERE id=$1`, [vehicle_id]);
 
-    const totalPrice = calculateTotalPrice(rent_start_date as string, rent_end_date as string, vehicle.rows[0].daily_rent_price);
+  const totalPrice = calculateTotalPrice(rent_start_date as string, rent_end_date as string, vehicle.rows[0].daily_rent_price);
 
-    await pool.query(`UPDATE bookings SET total_price=$1,status='active' WHERE id=$2`, [totalPrice, id]);
+  await pool.query(`UPDATE bookings SET total_price=$1,status='active' WHERE id=$2`, [totalPrice, id]);
 
-    //  Update vehicle status
-    await pool.query(`UPDATE vehicles SET availability_status='booked' WHERE id=$1`, [vehicle_id]);
+  //  Update vehicle status
+  await pool.query(`UPDATE vehicles SET availability_status='booked' WHERE id=$1`, [vehicle_id]);
 
-         await autoReturnExpiredBookings()
-    // get booking and vehicle info
-       const bookingsInfo = `b.id,b.customer_id,b.vehicle_id,b.status, TO_CHAR(b.rent_start_date,'YYYY-MM-DD') AS start_date, TO_CHAR(b.rent_end_date,'YYYY-MM-DD') AS end_date`;
-    const vehicleInfo = `v.vehicle_name, v.daily_rent_price`;
-    const bookingDataRes = await pool.query(`SELECT ${bookingsInfo},${vehicleInfo} FROM bookings b LEFT JOIN vehicles v ON b.vehicle_id=v.id WHERE b.id=$1`, [id]);
-    return BookingResponse(bookingDataRes.rows[0], 'post');
+  await autoReturnExpiredBookings()
+  // get booking and vehicle info
+  const bookingsInfo = `b.id,b.customer_id,b.vehicle_id,b.status, TO_CHAR(b.rent_start_date,'YYYY-MM-DD') AS start_date, TO_CHAR(b.rent_end_date,'YYYY-MM-DD') AS end_date`;
+  const vehicleInfo = `v.vehicle_name, v.daily_rent_price`;
+  const bookingDataRes = await pool.query(`SELECT ${bookingsInfo},${vehicleInfo} FROM bookings b LEFT JOIN vehicles v ON b.vehicle_id=v.id WHERE b.id=$1`, [id]);
+  const result = BookingResponse(bookingDataRes.rows[0], 'post')
+   return {
+      success: true,
+      message: "Booking created successfully",
+      data: result
+    };
 }
 
 const getAllBooking = async (email: string, role: string) => {
-    // admin view and customer view is deferent 
-    // admin view 
-     if (role === "admin") {
-        // booking admin
+  // admin view and customer view is deferent 
+  // admin view 
+  if (role === "admin") {
+    // booking admin
     const bookings_admin = `
       bookings.id,
       bookings.customer_id,
@@ -74,18 +79,22 @@ const getAllBooking = async (email: string, role: string) => {
     `;
 
     const result = await bookingget(logic);
-    return result;
+    return {
+      success: true,
+      message: "Bookings retrieved successfully",
+      data: result
+    };
   }
 
-    // customer view
+  // customer view
 
-    // bookings table data get using query
-     const curentUser = await pool.query(`SELECT id FROM users WHERE email=$1`, [email]);
+  // bookings table data get using query
+  const curentUser = await pool.query(`SELECT id FROM users WHERE email=$1`, [email]);
   if (curentUser.rowCount === 0) {
     throw new Error("User not found");
   }
   const userId = curentUser.rows[0].id;
-// booking customer
+  // booking customer
   const bookings_cus = `
     bookings.id,
     bookings.vehicle_id,
@@ -94,7 +103,7 @@ const getAllBooking = async (email: string, role: string) => {
     TO_CHAR(rent_end_date, 'YYYY-MM-DD') AS end_date
   `;
 
-//   vehicles customer
+  //   vehicles customer
   const vehicles_cus = `
     vehicles.vehicle_name,
     vehicles.registration_number,
@@ -102,7 +111,7 @@ const getAllBooking = async (email: string, role: string) => {
     vehicles.daily_rent_price
   `;
 
-//   get vehicle and booking
+  //   get vehicle and booking
   const customerBookings = await pool.query(`
     SELECT ${bookings_cus}, ${vehicles_cus}
     FROM bookings
@@ -113,7 +122,7 @@ const getAllBooking = async (email: string, role: string) => {
   if (customerBookings.rowCount === 0) {
     throw new Error("No bookings found for this user");
   }
-// structure create
+  // structure create
   const customer = customerBookings.rows.map(item => {
     const rent_start = new Date(item.start_date);
     const rent_end = new Date(item.end_date);
@@ -137,116 +146,124 @@ const getAllBooking = async (email: string, role: string) => {
 }
 
 const updateBooking = async (id: string, role: string, status: string) => {
-    // check 
-    const statusarr = ['active', 'cancelled', 'returned']
-    // active and cancelled ,returned is not include then thow new error
-    if (!statusarr.includes(status)) {
-        throw new Error(`input status must be active,cancelled,returned`)
-    }
+  // check 
+  const statusarr = ['active', 'cancelled', 'returned']
+  // active and cancelled ,returned is not include then thow new error
+  if (!statusarr.includes(status)) {
+    throw new Error(`input status must be active,cancelled,returned`)
+  }
 
-    // bookings data check
-    const bookingRes = await pool.query(
-        `SELECT * FROM bookings WHERE id = $1`,
-        [id]
-    );
-    if (bookingRes.rowCount === 0) {
-        throw new Error("Booking not found")
-    }
-    // if bookings data exits then variable booking data include
-    const booking = bookingRes.rows[0];
+  // bookings data check
+  const bookingRes = await pool.query(
+    `SELECT * FROM bookings WHERE id = $1`,
+    [id]
+  );
+  if (bookingRes.rowCount === 0) {
+    throw new Error("Booking not found")
+  }
+  // if bookings data exits then variable booking data include
+  const booking = bookingRes.rows[0];
 
-    // admin check 
-    if (role == "admin") {
-        // if status is returned and cancelled then vehicles table availability_status available
-        if (status == 'returned' || status == 'cancelled') {
-            await pool.query(`
+  // admin check 
+  if (role == "admin") {
+    // if status is returned and cancelled then vehicles table availability_status available
+    if (status == 'returned' || status == 'cancelled') {
+      await pool.query(`
                UPDATE vehicles SET availability_status='available' WHERE id=$1
         `, [booking.vehicle_id])
-        } else {
-            // otherwise availability_status='booked'
-            await pool.query(`
+    } else {
+      // otherwise availability_status='booked'
+      await pool.query(`
                UPDATE vehicles SET availability_status='booked' WHERE id=$1
         `, [booking.vehicle_id])
-        }
-        // show bookings information
-        const getBooking = await pool.query(`SELECT * FROM bookings WHERE id=$1`, [id])
+    }
+    // show bookings information
+    const getBooking = await pool.query(`SELECT * FROM bookings WHERE id=$1`, [id])
 
-        // if id not found then thow new error
-        if (!getBooking.rows[0].id) {
-            throw new Error('booking not found by id')
-        }
-        // update bookings table
-        await pool.query(`UPDATE bookings SET status=$1 WHERE id=$2`, [status, id])
+    // if id not found then thow new error
+    if (!getBooking.rows[0].id) {
+      throw new Error('booking not found by id')
+    }
+    // update bookings table
+    await pool.query(`UPDATE bookings SET status=$1 WHERE id=$2`, [status, id])
 
-        // customise table query
+    // customise table query
 
-        // bookings get
-        const bookings_admin = `b.id,b.customer_id,b.vehicle_id,b.status ,TO_CHAR(b.rent_start_date, 'YYYY-MM-DD') AS start_date ,TO_CHAR(b.rent_end_date, 'YYYY-MM-DD') AS end_date`
-        // vehicles get
-        const vehicles_admin = `
+    // bookings get
+    const bookings_admin = `b.id,b.customer_id,b.vehicle_id,b.status ,TO_CHAR(b.rent_start_date, 'YYYY-MM-DD') AS start_date ,TO_CHAR(b.rent_end_date, 'YYYY-MM-DD') AS end_date`
+    // vehicles get
+    const vehicles_admin = `
           v.daily_rent_price,
           v.availability_status
           `
 
-        //   include query bookings_admin and vehicles_admin
-        const getbookingsandvehicle = await pool.query(`SELECT ${bookings_admin},${vehicles_admin} FROM bookings b LEFT JOIN vehicles v ON b.vehicle_id=v.id WHERE b.id=$1 `, [id])
-        const getData = getbookingsandvehicle.rows[0]
-        const method = 'updateAdmin'
-        // send bookingDate function
-        const result = await BookingResponse(getData, method)
-        return result
+    //   include query bookings_admin and vehicles_admin
+    const getbookingsandvehicle = await pool.query(`SELECT ${bookings_admin},${vehicles_admin} FROM bookings b LEFT JOIN vehicles v ON b.vehicle_id=v.id WHERE b.id=$1 `, [id])
+    const getData = getbookingsandvehicle.rows[0]
+    const method = 'updateAdmin'
+    // send bookingDate function
+    const result = await BookingResponse(getData, method)
+     return {
+      success: true,
+      message: "Booking marked as returned. Vehicle is now available",
+      data: result
     }
+  }
 
-    // customer view and fuctionality
+  // customer view and fuctionality
 
-    // if status returned and active then throw new Error
-    if (status == 'returned' || status == 'active') {
-        throw new Error('you isn\' change just cancelled change')
-    }
-    if (role == "customer" && status !== 'cancelled') {
-        throw new Error("Customers can only cancel bookings")
-    }
+  // if status returned and active then throw new Error
+  if (status == 'returned' || status == 'active') {
+    throw new Error('you isn\' change just cancelled change')
+  }
+  if (role == "customer" && status !== 'cancelled') {
+    throw new Error("Customers can only cancel bookings")
+  }
 
-    // get startDate in bookings table
-    const startDate = await pool.query(`SELECT TO_CHAR(rent_start_date, 'YYYY-MM-DD') AS start_date FROM bookings WHERE id=$1`, [id])
-    // curent date
-    const curentDate = new Date()
-    const number_time_now = curentDate.getTime()
-    // before startDate
-    const start = startDate.rows[0].start_date
-    const startD = new Date(start)
-    const number_time_start = startD.getTime()
-    // condition
-    if (number_time_now > number_time_start) {
-        throw new Error("Cancel booking before start date only")
-    }
-    // if role is customer then functionality work
-    if (role == 'customer') {
-        // update status
-        await pool.query(`UPDATE bookings SET status=$1 WHERE id=$2`, [status, id])
+  // get startDate in bookings table
+  const startDate = await pool.query(`SELECT TO_CHAR(rent_start_date, 'YYYY-MM-DD') AS start_date FROM bookings WHERE id=$1`, [id])
+  // curent date
+  const curentDate = new Date()
+  const number_time_now = curentDate.getTime()
+  // before startDate
+  const start = startDate.rows[0].start_date
+  const startD = new Date(start)
+  const number_time_start = startD.getTime()
+  // condition
+  if (number_time_now > number_time_start) {
+    throw new Error("Cancel booking before start date only")
+  }
+  // if role is customer then functionality work
+  if (role == 'customer') {
+    // update status
+    await pool.query(`UPDATE bookings SET status=$1 WHERE id=$2`, [status, id])
 
-        // update behicles table availability_status
-        await pool.query(`
+    // update behicles table availability_status
+    await pool.query(`
                UPDATE vehicles SET availability_status='available' WHERE id=$1
         `, [booking.vehicle_id])
 
-        // bookings get
-        const bookings_cus = `b.id,b.customer_id,b.vehicle_id,b.status ,TO_CHAR(b.rent_start_date, 'YYYY-MM-DD') AS start_date ,TO_CHAR(b.rent_end_date, 'YYYY-MM-DD') AS end_date`
-        // vehicles table data get
-        const vehicles_customer = `v.vehicle_name,
+    // bookings get
+    const bookings_cus = `b.id,b.customer_id,b.vehicle_id,b.status ,TO_CHAR(b.rent_start_date, 'YYYY-MM-DD') AS start_date ,TO_CHAR(b.rent_end_date, 'YYYY-MM-DD') AS end_date`
+    // vehicles table data get
+    const vehicles_customer = `v.vehicle_name,
           v.daily_rent_price,
           v.registration_number`
-        //   query include bookings_cus and vehicles_customer
-        const getbookingandvehicles = await pool.query(`SELECT ${bookings_cus},${vehicles_customer} FROM bookings b LEFT JOIN vehicles v ON b.vehicle_id=v.id WHERE b.id=$1`, [id])
+    //   query include bookings_cus and vehicles_customer
+    const getbookingandvehicles = await pool.query(`SELECT ${bookings_cus},${vehicles_customer} FROM bookings b LEFT JOIN vehicles v ON b.vehicle_id=v.id WHERE b.id=$1`, [id])
 
-        const getData = getbookingandvehicles.rows[0]
-        // send information bookingDate
-        const result = await BookingResponse(getData, role)
-        return result
+    const getData = getbookingandvehicles.rows[0]
+    // send information bookingDate
+    const result = await BookingResponse(getData, role)
+    return {
+      success: true,
+      message: "Booking cancelled successfully",
+      data: result
     }
+  }
 }
 export const bookingsService = {
-    bookingsCreate,
-    getAllBooking,
-    updateBooking
+  bookingsCreate,
+  getAllBooking,
+  updateBooking
 }

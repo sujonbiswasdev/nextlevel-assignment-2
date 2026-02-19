@@ -8,7 +8,7 @@ const bookingsCreate=async(req:Request,res:Response)=>{
             return res.status(401).json({ success: false, message: "you are unauthorized" })
         }
         const result  = await bookingsService.bookingsCreate(req.body);
-       return res.status(201).json({sucess:true,message:"Booking created successfully",data:result})
+       return res.status(201).json(result)
     } catch (error:any) {
         res.status(400).json({sucess:false,message:"bookings create failed",ERROR:error.message})
     }
@@ -19,7 +19,7 @@ const getAllBooking=async(req:Request,res:Response)=>{
     console.log(req.user,'user')
     try {
         const result = await bookingsService.getAllBooking(email,role)
-        res.status(200).json({sucess:true,message:"Bookings retrieved successfully",data:result})
+        res.status(200).json(result)
     } catch (error:any){
         res.status(500).json({sucess:false,message:"booking get failed",ERROR:error.message})
         
@@ -32,7 +32,7 @@ const updateBookings=async(req:Request,res:Response)=>{
     const {status}=req.body;
     try {
         const result = await bookingsService.updateBooking(id as string,role,status)
-        res.status(200).json({sucess:true,message:"bookings update sucessfully",data:result})
+        res.status(200).json(result)
     } catch (error:any) {
         res.status(500).json({sucess:false,message:"booking data update failed",ERROR:error.message})
         

@@ -25,7 +25,11 @@ const createUser=async(name:string,email:string,password:string,phone:string,rol
     if(result.rows[0].password){
         delete result.rows[0].password
     }
-    return result.rows[0];
+    return {
+      success: true,
+      message: "User registered successfully",
+      data: result.rows[0]
+    };
 }
 // login user
 const loginUser=async(email:string,password:string)=>{
@@ -49,6 +53,7 @@ const loginUser=async(email:string,password:string)=>{
        const token= jwt.sign({name:user.name,phone:user.phone,email:user.email,role:user.role
        },config.jwt_secret as string, { expiresIn: '60d' });
        return {token,user}
+       
 }
 
 export const authServices={
