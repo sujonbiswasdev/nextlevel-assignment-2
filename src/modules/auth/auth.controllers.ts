@@ -5,7 +5,7 @@ const createUser=async(req:Request,res:Response)=>{
     const {name,email,password,phone,role}=req.body;
     try {
         const result = await authServices.createUser(name,email,password,phone,role)
-        res.status(201).json({success:true,message:"User registered successfully",data:result})
+        res.status(201).json(result)
     } catch (error:any) {
         res.status(400).json({success:false,message:"User registered Failed",ERROR:error.message})
     }

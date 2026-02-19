@@ -205,7 +205,7 @@ const updateBooking = async (id: string, role: string, status: string) => {
     const result = await BookingResponse(getData, method)
      return {
       success: true,
-      message: "Booking marked as returned. Vehicle is now available",
+      message: status==="cancelled"?"Booking cancelled successfully":"Booking marked as returned. Vehicle is now available",
       data: result
     }
   }
