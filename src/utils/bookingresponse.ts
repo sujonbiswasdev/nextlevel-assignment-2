@@ -35,7 +35,7 @@ export const BookingResponse = async (getdata: any,method?: string) => {
         rent_start_date: start_date,
         rent_end_date: end_date,
         total_price: total_price,
-        status: status,
+        status: status=="cancelled"?"":status,
         vehicle: method === 'updateAdmin' ? vehicle
             : method === 'post' ? post
                 : undefined
