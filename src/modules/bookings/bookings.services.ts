@@ -38,12 +38,7 @@ const bookingsCreate = async ({ customer_id, vehicle_id, rent_start_date, rent_e
   const bookingsInfo = `b.id,b.customer_id,b.vehicle_id,b.status, TO_CHAR(b.rent_start_date,'YYYY-MM-DD') AS start_date, TO_CHAR(b.rent_end_date,'YYYY-MM-DD') AS end_date`;
   const vehicleInfo = `v.vehicle_name, v.daily_rent_price`;
   const bookingDataRes = await pool.query(`SELECT ${bookingsInfo},${vehicleInfo} FROM bookings b LEFT JOIN vehicles v ON b.vehicle_id=v.id WHERE b.id=$1`, [id]);
-  const result = BookingResponse(bookingDataRes.rows[0], 'post')
-   return {
-      success: true,
-      message: "Booking created successfully",
-      data: result
-    };
+  return BookingResponse(bookingDataRes.rows[0], 'post')
 }
 
 const getAllBooking = async (email: string, role: string) => {
