@@ -24,7 +24,7 @@ const updateUser = async (req: Request, res: Response) => {
         if (!user) {
             return res.status(401).json({ success: false, message: "you are unauthorized" })
         }
-        const result = await userServices.updateUser(user.role as string, Number(id), name, email, phone, role)
+        const result = await userServices.updateUser(user.email, Number(id), name, email, phone, role)
         res.status(200).json({ sucess: true, message: "User updated successfully", data: result })
     } catch (error: any) {
         res.status(400).json({ sucess: false, message: "update failed", ERROR: error.message })

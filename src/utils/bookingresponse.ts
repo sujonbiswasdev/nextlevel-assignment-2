@@ -1,6 +1,3 @@
-import { pool } from "../config/DB.js"
-import { autoReturnExpiredBookings } from "../helper/bookingsReusable.js"
-
 export const BookingResponse = async (getdata: any,method?: string) => {
 
     const { id, start_date, end_date, daily_rent_price, availability_status, vehicle_name, customer_id, vehicle_id,status } = getdata

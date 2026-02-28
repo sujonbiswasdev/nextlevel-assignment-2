@@ -6,40 +6,77 @@ import { bookingget } from "../../utils/bookingGet_Admin.js";
 import { BookingResponse } from "../../utils/bookingresponse.js";
 
 
-const bookingsCreate = async ({ customer_id, vehicle_id, rent_start_date, rent_end_date, total_price, status }: CreateBookingPayload) => {
-  // exist vehicles
-  await checkVehicleExists(vehicle_id)
-  // exist user
-  await checkUserExists(customer_id)
+const bookingsCreate = async ({
+  customer_id,
+  vehicle_id,
+  rent_start_date,
+  rent_end_date,
+  status = "active"
+}: CreateBookingPayload) => {
 
-  const existingBooking = await pool.query(`SELECT 1 FROM bookings WHERE status='active' AND vehicle_id=$1`, [vehicle_id]);
-  if (existingBooking.rowCount! > 0) throw new Error("This vehicle is already booked");
+  // check vehicle & user
+  await Promise.all([
+    checkVehicleExists(vehicle_id),
+    checkUserExists(customer_id)
+  ]);
 
-  // otherwise bookings data insert
-  const insertRes = await pool.query(
-    `INSERT INTO bookings(customer_id, vehicle_id, rent_start_date, rent_end_date, total_price, status) 
-         VALUES($1,$2,$3,$4,$5,$6) RETURNING id`,
-    [customer_id, vehicle_id, rent_start_date, rent_end_date, total_price || 5, status || 'active']
+  // check already booked
+  const { rowCount } = await pool.query(
+    `SELECT 1 FROM bookings WHERE status='active' AND vehicle_id=$1`,
+    [vehicle_id]
   );
-  const id = insertRes.rows[0].id;
 
-  // calculation
-  const vehicle = await pool.query(`SELECT daily_rent_price FROM vehicles WHERE id=$1`, [vehicle_id]);
+  if (rowCount! > 0) throw new Error("This vehicle is already booked");
 
-  const totalPrice = calculateTotalPrice(rent_start_date as string, rent_end_date as string, vehicle.rows[0].daily_rent_price);
+  // get vehicle price
+  const { rows: vehicle } = await pool.query(
+    `SELECT daily_rent_price FROM vehicles WHERE id=$1`,
+    [vehicle_id]
+  );
 
-  await pool.query(`UPDATE bookings SET total_price=$1,status='active' WHERE id=$2`, [totalPrice, id]);
+  const totalPrice = calculateTotalPrice(
+    rent_start_date as string,
+    rent_end_date as string,
+    vehicle[0].daily_rent_price
+  );
 
-  //  Update vehicle status
-  await pool.query(`UPDATE vehicles SET availability_status='booked' WHERE id=$1`, [vehicle_id]);
+  // insert booking
+  const { rows } = await pool.query(
+    `INSERT INTO bookings
+     (customer_id, vehicle_id, rent_start_date, rent_end_date, total_price, status)
+     VALUES ($1,$2,$3,$4,$5,$6)
+     RETURNING id`,
+    [customer_id, vehicle_id, rent_start_date, rent_end_date, totalPrice, status]
+  );
 
-  await autoReturnExpiredBookings()
-  // get booking and vehicle info
-  const bookingsInfo = `b.id,b.customer_id,b.vehicle_id,b.status, TO_CHAR(b.rent_start_date,'YYYY-MM-DD') AS start_date, TO_CHAR(b.rent_end_date,'YYYY-MM-DD') AS end_date`;
-  const vehicleInfo = `v.vehicle_name, v.daily_rent_price`;
-  const bookingDataRes = await pool.query(`SELECT ${bookingsInfo},${vehicleInfo} FROM bookings b LEFT JOIN vehicles v ON b.vehicle_id=v.id WHERE b.id=$1`, [id]);
-  return BookingResponse(bookingDataRes.rows[0], 'post')
-}
+  const bookingId = rows[0].id;
+
+  // update vehicle
+  await pool.query(
+    `UPDATE vehicles SET availability_status='booked' WHERE id=$1`,
+    [vehicle_id]
+  );
+
+  await autoReturnExpiredBookings();
+
+  // return booking info
+  const bookingData = await pool.query(`
+    SELECT 
+      b.id,
+      b.customer_id,
+      b.vehicle_id,
+      b.status,
+      TO_CHAR(b.rent_start_date,'YYYY-MM-DD') AS start_date,
+      TO_CHAR(b.rent_end_date,'YYYY-MM-DD') AS end_date,
+      v.vehicle_name,
+      v.daily_rent_price
+    FROM bookings b
+    LEFT JOIN vehicles v ON b.vehicle_id = v.id
+    WHERE b.id=$1
+  `, [bookingId]);
+
+  return BookingResponse(bookingData.rows[0], 'post');
+};
 
 const getAllBooking = async (email: string, role: string) => {
   // admin view and customer view is deferent 

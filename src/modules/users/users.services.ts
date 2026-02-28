@@ -12,11 +12,12 @@ const getAllUser=async()=>{
     return result
 }
 
-const updateUser=async(userrole:string,id:number,name?:string,email?:string,phone?:string,role?:string)=>{
+const updateUser=async(loginuseremail:string,id:number,name?:string,email?:string,phone?:string,role?:string)=>{
   
-  const existing = await pool.query(`SELECT * FROM users WHERE id=$1`, [id]);
-    if (existing.rows.length === 0) throw new Error("user not found");
-    const user = existing.rows[0];
+  const finduser = await pool.query(`SELECT * FROM users WHERE id=$1`, [id]);
+   const loginUser = await pool.query(`SELECT * FROM users WHERE email=$1`, [loginuseremail]);
+    if (finduser.rows.length === 0) throw new Error("user not found");
+    const user = finduser.rows[0];
 
        const updateduser ={
         role:role ?? user.role,
@@ -25,7 +26,7 @@ const updateUser=async(userrole:string,id:number,name?:string,email?:string,phon
         phone: phone ?? user.phone
     };
     // update users table data
-    if(userrole=='admin'){
+    if(loginUser.rows[0].role=='admin'){
       const result =  await pool.query(
         `
         UPDATE users SET name=$1,email=$2,phone=$3,role=$4 WHERE id=$5 RETURNING *
@@ -34,7 +35,10 @@ const updateUser=async(userrole:string,id:number,name?:string,email?:string,phon
     delete result.rows[0].password
     return result.rows[0]
     }
-      if(userrole=='customer'){
+    if(finduser.rows[0].id!==loginUser.rows[0].id){
+        throw new Error("you are not valid user")
+    }
+      if(loginUser.rows[0].role=='customer'){
       const result =  await pool.query(
         `
         UPDATE users SET name=$1,email=$2,phone=$3 WHERE id=$4 RETURNING *
